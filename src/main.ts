@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
-import { wait } from './wait.mjs'
-import { createActionAuth } from '@octokit/auth-action'
+import { wait } from './wait.js'
 
 /**
  * The main function for the action.
@@ -18,10 +17,7 @@ export async function run(): Promise<void> {
     await wait(10000)
     core.debug(new Date().toTimeString())
 
-    const auth = createActionAuth()
-    const authentication = await auth()
-
-    console.log(authentication)
+    const test = require('@octokit/auth-action')
 
     // Set outputs for other workflow steps to use
     core.setOutput('time', new Date().toTimeString())
