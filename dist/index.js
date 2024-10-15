@@ -24958,12 +24958,12 @@ const wait_1 = __nccwpck_require__(5259);
  */
 async function run() {
     try {
-        const ms = core.getInput('milliseconds');
+        const commit = core.getInput('commit');
         // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        core.debug(`Waiting ${ms} milliseconds ...`);
+        core.debug(`${commit} needs to be deployed ...`);
         // Log the current timestamp, wait, then log the new timestamp
         core.debug(new Date().toTimeString());
-        await (0, wait_1.wait)(parseInt(ms, 10));
+        await (0, wait_1.wait)(10000);
         core.debug(new Date().toTimeString());
         // Set outputs for other workflow steps to use
         core.setOutput('time', new Date().toTimeString());

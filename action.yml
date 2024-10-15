@@ -9,10 +9,9 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  commit:
+    description: 'Commit Sha to be deployed'
     required: true
-    default: '1000'
 
 # Define your outputs here.
 outputs:
