@@ -9,14 +9,23 @@ branding:
 
 # Define your inputs here.
 inputs:
-  commit:
-    description: 'Commit Sha to be deployed'
+  semaphoreAPI:
+    description: 'Semaphore API to be queried'
+    required: true
+  semaphoreAPIKey:
+    description: 'Semaphore API key for authorization'
+    required: true
+  pull_request:
+    description: 'Pull Request that triggered the action'
+    required: true
+  component:
+    description: 'Component to be deployed'
     required: true
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  deployment_permitted:
+    description: 'If true, automatic deployment can continue'
 
 runs:
   using: node20
