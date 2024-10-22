@@ -21,6 +21,9 @@ inputs:
   component:
     description: 'Component to be deployed'
     required: true
+  GITHUB_TOKEN:
+    description: 'Token for Repository Access'
+    required: true
 
 # Define your outputs here.
 outputs:
