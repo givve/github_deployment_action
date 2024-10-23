@@ -26,7 +26,7 @@ export class GitHub {
 
   async getLabels(): Promise<string[]> {
     return new Promise(async (resolve, reject) => {
-      const { data: issue } = await this.requestWithAuth(
+      const { data: issue, error: error } = await this.requestWithAuth(
         'GET /repos/{owner}/{repo}/issues/{pull_number}',
         {
           owner: 'givve',
@@ -34,7 +34,7 @@ export class GitHub {
           pull_number: core.getInput('pull_request')
         }
       )
-
+      console.log(error)
       resolve(issue.labels.map((label: any) => label.name))
     })
   }
