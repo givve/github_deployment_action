@@ -36,12 +36,8 @@ export async function run(): Promise<void> {
           await wait(60000)
         } else {
           // manual deployment lock active. Abort!
-          core.setOutput('deployment_permitted', false)
+          core.setFailed('Manual deployment lock active!')
         }
-      } else {
-        // we can deploy
-        core.setOutput('deployment_permitted', true)
-        console.log('yeah baby')
       }
     } else {
       // No lock, we need to lock deployment
@@ -50,7 +46,7 @@ export async function run(): Promise<void> {
       }
 
       // Manual deployment, so deployment is not permitted
-      core.setOutput('deployment_permitted', false)
+      core.setFailed('Manual deployment lock active!')
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
