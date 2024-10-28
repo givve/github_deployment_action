@@ -45850,6 +45850,7 @@ async function getLocks(component) {
     });
 }
 async function setLock(component) {
+    console.log('SET LOCK');
     return axios.post(semaphoreAPI +
         `/api/products/5f7427d977b4b64aeabad92d/components/${component}/locks`, {
         lock: {

@@ -17,6 +17,7 @@ export async function getLocks(component: string): Promise<any> {
 }
 
 export async function setLock(component: string): Promise<any> {
+  console.log('SET LOCK')
   return axios.post(
     semaphoreAPI +
       `/api/products/5f7427d977b4b64aeabad92d/components/${component}/locks`,
