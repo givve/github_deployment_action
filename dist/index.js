@@ -45701,11 +45701,12 @@ class GitHub {
     }
     async getLabels() {
         return new Promise(async (resolve, reject) => {
-            const { data: issue } = await this.requestWithAuth('GET /repos/{owner}/{repo}/issues/{pull_number}', {
+            const { data: issue, error: error } = await this.requestWithAuth('GET /repos/{owner}/{repo}/issues/{pull_number}', {
                 owner: 'givve',
                 repo: 'givve',
                 pull_number: core.getInput('pull_request')
             });
+            console.log(error);
             resolve(issue.labels.map((label) => label.name));
         });
     }
@@ -45762,13 +45763,16 @@ async function run() {
     try {
         const github = new github_js_1.GitHub();
         await github.performAuth();
+        console.log('AUTHED');
         const labels = await github.getLabels();
+        console.log(labels);
         // Manual deployment, check locks
         const locks = (await (0, semaphore_js_1.getLocks)(component)).data.data;
         const activeLock = _.find(locks, {
             component: component,
             unlocked_by: null
         });
+        core.debug(JSON.stringify(labels));
         if (_.includes(labels, 'auto deploy')) {
             if (activeLock) {
                 // There is a lock, so we check if we cancel or wait
@@ -45778,13 +45782,8 @@ async function run() {
                 }
                 else {
                     // manual deployment lock active. Abort!
-                    core.setOutput('deployment_permitted', false);
+                    core.setFailed('Manual deployment lock active!');
                 }
-            }
-            else {
-                // we can deploy
-                core.setOutput('deployment_permitted', true);
-                console.log('yeah baby');
             }
         }
         else {
@@ -45793,7 +45792,7 @@ async function run() {
                 const { error } = await (0, semaphore_js_1.setLock)(component);
             }
             // Manual deployment, so deployment is not permitted
-            core.setOutput('deployment_permitted', false);
+            core.setFailed('Manual deployment lock active!');
         }
     }
     catch (error) {
