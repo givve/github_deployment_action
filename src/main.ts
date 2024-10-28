@@ -18,9 +18,9 @@ export async function run(): Promise<void> {
   try {
     const github = new GitHub()
     await github.performAuth()
-
+    console.log('AUTHED')
     const labels = await github.getLabels()
-
+    console.log(labels)
     // Manual deployment, check locks
     const locks = (await getLocks(component)).data.data
     const activeLock = _.find(locks, {
