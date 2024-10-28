@@ -27,7 +27,7 @@ export async function run(): Promise<void> {
       component: component,
       unlocked_by: null
     })
-
+    core.debug(JSON.stringify(labels))
     if (_.includes(labels, 'auto deploy')) {
       if (activeLock) {
         // There is a lock, so we check if we cancel or wait
