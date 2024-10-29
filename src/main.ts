@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { wait } from './wait.js'
+import { checkOrWait } from './wait.js'
 import { getLocks, setLock } from './semaphore.js'
 import { GitHub } from './github.js'
 import * as _ from 'lodash'
@@ -18,30 +18,15 @@ export async function run(): Promise<void> {
   try {
     const github = new GitHub()
     await github.performAuth()
-    console.log('AUTHED')
+
     const labels = await github.getLabels()
-    console.log(labels)
-    // Manual deployment, check locks
-    const locks = (await getLocks(component)).data.data
-    const activeLock = _.find(locks, {
-      component: component,
-      unlocked_by: null
-    })
-    core.debug(JSON.stringify(labels))
+
     if (_.includes(labels, 'auto deploy')) {
-      if (activeLock) {
-        // There is a lock, so we check if we cancel or wait
-        if (activeLock.purpose !== 'manual deployment lock') {
-          // Some other deployment is running, so we wait
-          await wait(60000)
-        } else {
-          // manual deployment lock active. Abort!
-          core.setFailed('Manual deployment lock active!')
-        }
-      }
+      await checkOrWait()
     } else {
+      const lock = await getLock()
       // No lock, we need to lock deployment
-      if (!activeLock) {
+      if (!lock) {
         const { error } = await setLock(component)
       }
 
@@ -52,4 +37,14 @@ export async function run(): Promise<void> {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
   }
+}
+
+export async function getLock() {
+  // Manual deployment, check locks
+  const locks = (await getLocks(component)).data.data
+
+  return _.find(locks, {
+    component: component,
+    unlocked_by: null
+  })
 }

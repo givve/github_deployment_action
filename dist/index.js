@@ -45706,7 +45706,6 @@ class GitHub {
                 repo: 'givve',
                 pull_number: core.getInput('pull_request')
             });
-            console.log(error);
             resolve(issue.labels.map((label) => label.name));
         });
     }
@@ -45746,6 +45745,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
+exports.getLock = getLock;
 const core = __importStar(__nccwpck_require__(2186));
 const wait_js_1 = __nccwpck_require__(5259);
 const semaphore_js_1 = __nccwpck_require__(9004);
@@ -45763,32 +45763,14 @@ async function run() {
     try {
         const github = new github_js_1.GitHub();
         await github.performAuth();
-        console.log('AUTHED');
         const labels = await github.getLabels();
-        console.log(labels);
-        // Manual deployment, check locks
-        const locks = (await (0, semaphore_js_1.getLocks)(component)).data.data;
-        const activeLock = _.find(locks, {
-            component: component,
-            unlocked_by: null
-        });
-        core.debug(JSON.stringify(labels));
         if (_.includes(labels, 'auto deploy')) {
-            if (activeLock) {
-                // There is a lock, so we check if we cancel or wait
-                if (activeLock.purpose !== 'manual deployment lock') {
-                    // Some other deployment is running, so we wait
-                    await (0, wait_js_1.wait)(60000);
-                }
-                else {
-                    // manual deployment lock active. Abort!
-                    core.setFailed('Manual deployment lock active!');
-                }
-            }
+            await (0, wait_js_1.checkOrWait)();
         }
         else {
+            const lock = await getLock();
             // No lock, we need to lock deployment
-            if (!activeLock) {
+            if (!lock) {
                 const { error } = await (0, semaphore_js_1.setLock)(component);
             }
             // Manual deployment, so deployment is not permitted
@@ -45800,6 +45782,14 @@ async function run() {
         if (error instanceof Error)
             core.setFailed(error.message);
     }
+}
+async function getLock() {
+    // Manual deployment, check locks
+    const locks = (await (0, semaphore_js_1.getLocks)(component)).data.data;
+    return _.find(locks, {
+        component: component,
+        unlocked_by: null
+    });
 }
 
 
@@ -45850,7 +45840,6 @@ async function getLocks(component) {
     });
 }
 async function setLock(component) {
-    console.log('SET LOCK');
     return axios.post(semaphoreAPI +
         `/api/products/5f7427d977b4b64aeabad92d/components/${component}/locks`, {
         lock: {
@@ -45869,24 +45858,55 @@ async function setLock(component) {
 /***/ }),
 
 /***/ 5259:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.wait = wait;
-/**
- * Wait for a number of milliseconds.
- * @param milliseconds The number of milliseconds to wait.
- * @returns {Promise<string>} Resolves with 'done!' after the wait is over.
- */
-async function wait(milliseconds) {
-    return new Promise(resolve => {
-        if (isNaN(milliseconds)) {
-            throw new Error('milliseconds not a number');
-        }
-        setTimeout(() => resolve('done!'), milliseconds);
+exports.checkOrWait = checkOrWait;
+const main_1 = __nccwpck_require__(399);
+const core = __importStar(__nccwpck_require__(2186));
+async function checkOrWait() {
+    return new Promise(async (resolve, reject) => {
+        await check(resolve, reject);
     });
+}
+async function check(resolve, reject) {
+    const lock = await (0, main_1.getLock)();
+    if (!lock) {
+        resolve('Done!');
+    }
+    else {
+        if (lock.purpose === 'manual deployment lock') {
+            // Some other deployment is running, so we wait
+            core.setFailed('Manual deployment lock active!');
+            reject('Locked');
+        }
+    }
+    setTimeout(check, 20000);
 }
 
 

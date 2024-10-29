@@ -1,14 +1,24 @@
-/**
- * Wait for a number of milliseconds.
- * @param milliseconds The number of milliseconds to wait.
- * @returns {Promise<string>} Resolves with 'done!' after the wait is over.
- */
-export async function wait(milliseconds: number): Promise<string> {
-  return new Promise(resolve => {
-    if (isNaN(milliseconds)) {
-      throw new Error('milliseconds not a number')
-    }
+import { getLock } from './main'
+import * as core from '@actions/core'
 
-    setTimeout(() => resolve('done!'), milliseconds)
+export async function checkOrWait(): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    await check(resolve, reject)
   })
+}
+
+async function check(resolve: any, reject: any) {
+  const lock = await getLock()
+
+  if (!lock) {
+    resolve('Done!')
+  } else {
+    if (lock.purpose === 'manual deployment lock') {
+      // Some other deployment is running, so we wait
+      core.setFailed('Manual deployment lock active!')
+      reject('Locked')
+    }
+  }
+
+  setTimeout(check, 20000)
 }

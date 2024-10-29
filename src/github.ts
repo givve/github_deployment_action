@@ -34,7 +34,7 @@ export class GitHub {
           pull_number: core.getInput('pull_request')
         }
       )
-      console.log(error)
+
       resolve(issue.labels.map((label: any) => label.name))
     })
   }

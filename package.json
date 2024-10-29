@@ -1,7 +1,7 @@
 {
   "name": "typescript-action",
   "description": "Givve Automatic Deployment",
-  "version": "v0.0.15",
+  "version": "v0.0.17",
   "author": "PL Gutscheinsysteme GmbH",
   "private": true,
   "homepage": "https://github.com/actions/typescript-action",
@@ -72,7 +72,8 @@
     "@octokit/rest": "^21.0.2",
     "@types/lodash": "^4.17.11",
     "axios": "^1.7.7",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
