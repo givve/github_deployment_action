@@ -17,8 +17,10 @@ async function check(resolve: any, reject: any) {
       // Some other deployment is running, so we wait
       core.setFailed('Manual deployment lock active!')
       reject('Locked')
+    } else {
+      setTimeout(() => {
+        check(resolve, reject)
+      }, 20000)
     }
   }
-
-  setTimeout(check, 20000)
 }

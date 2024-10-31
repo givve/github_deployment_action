@@ -45905,8 +45905,12 @@ async function check(resolve, reject) {
             core.setFailed('Manual deployment lock active!');
             reject('Locked');
         }
+        else {
+            setTimeout(() => {
+                check(resolve, reject);
+            }, 20000);
+        }
     }
-    setTimeout(check, 20000);
 }
 
 
