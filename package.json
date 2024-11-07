@@ -1,16 +1,16 @@
 {
   "name": "typescript-action",
   "description": "Givve Automatic Deployment",
-  "version": "v0.0.18",
+  "version": "v0.1.0",
   "author": "PL Gutscheinsysteme GmbH",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/givve/github_deployment_action",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/givve/github_deployment_action.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/givve/github_deployment_action"
   },
   "keywords": [
     "actions",

@@ -27,11 +27,11 @@ export async function run(): Promise<void> {
       const lock = await getLock()
       // No lock, we need to lock deployment
       if (!lock) {
-        const { error } = await setLock(component)
+        const { result } = await setLock(component)
       }
 
       // Manual deployment, so deployment is not permitted
-      core.setFailed('Manual deployment lock active!')
+      core.setFailed('Manual deployment lock active! ID to unlock: ' + lock.id)
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
