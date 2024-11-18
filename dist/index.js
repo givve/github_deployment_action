@@ -45766,10 +45766,11 @@ async function run() {
             const labels = await github.getLabels();
             if (!_.includes(labels, 'auto deploy') &&
                 _.includes(labels, 'manual deploy')) {
-                const lock = await getLock();
+                let lock = await getLock();
                 // No lock, we need to lock deployment
                 if (!lock) {
                     const { result } = await (0, semaphore_js_1.setLock)(component);
+                    lock = result;
                 }
                 // Manual deployment, so deployment is not permitted
                 core.setOutput('deployment_lock', lock.id);

@@ -26,10 +26,11 @@ export async function run(): Promise<void> {
         !_.includes(labels, 'auto deploy') &&
         _.includes(labels, 'manual deploy')
       ) {
-        const lock = await getLock()
+        let lock = await getLock()
         // No lock, we need to lock deployment
         if (!lock) {
           const { result } = await setLock(component)
+          lock = result
         }
 
         // Manual deployment, so deployment is not permitted
