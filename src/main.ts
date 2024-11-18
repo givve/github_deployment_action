@@ -31,7 +31,7 @@ export async function run(): Promise<void> {
           lock = data.data
         }
         // Manual deployment, so deployment is not permitted
-        core.setOutput('deployment_lock', lock.id)
+        core.setOutput('deployment_lock', lock.id + 'TEST')
       }
     }
   } catch (error) {

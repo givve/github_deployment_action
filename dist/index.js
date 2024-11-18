@@ -45650,6 +45650,48 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 978:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GitHub = void 0;
+const axios = __nccwpck_require__(8757);
+const octoAuth = __nccwpck_require__(1188);
+const Request = __nccwpck_require__(8279);
+class GitHub {
+    requestWithAuth;
+    constructor() { }
+    async performAuth() {
+        const auth = octoAuth.createActionAuth();
+        const authentication = await auth();
+        this.requestWithAuth = Request.request.defaults({
+            request: {
+                hook: auth.hook
+            },
+            mediaType: {
+                previews: ['machine-man']
+            }
+        });
+    }
+    async getLabels() {
+        return new Promise(async (resolve, reject) => {
+            const { data: issue, error: error } = await this.requestWithAuth('GET /repos/{owner}/{repo}/issues/{pull_number}', {
+                owner: 'givve',
+                repo: 'givve',
+                //pull_number: core.getInput('pull_request')
+                pull_number: 7485
+            });
+            resolve(issue.labels.map((label) => label.name));
+        });
+    }
+}
+exports.GitHub = GitHub;
+
+
+/***/ }),
+
 /***/ 399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -45683,6 +45725,7 @@ exports.run = run;
 exports.getLock = getLock;
 const core = __importStar(__nccwpck_require__(2186));
 const semaphore_js_1 = __nccwpck_require__(9004);
+const github_js_1 = __nccwpck_require__(978);
 const _ = __importStar(__nccwpck_require__(250));
 const https = __nccwpck_require__(5687);
 const octoAuth = __nccwpck_require__(1188);
@@ -45694,27 +45737,22 @@ const component = core.getInput('component');
  */
 async function run() {
     try {
-        // if (core.getInput('pull_request') != '') {
-        //   const github = new GitHub()
-        //   await github.performAuth()
-        //   const labels = await github.getLabels()
-        //   if (
-        //     !_.includes(labels, 'auto deploy') &&
-        //     _.includes(labels, 'manual deploy')
-        //   ) {
-        //     let lock = await getLock()
-        //     // No lock, we need to lock deployment
-        //     if (!lock) {
-        //       const { data } = await setLock(component)
-        //       console.log(data)
-        //       lock = data
-        //     }
-        //     // Manual deployment, so deployment is not permitted
-        //     core.setOutput('deployment_lock', lock.id)
-        //   }
-        // }
-        const { data } = await (0, semaphore_js_1.setLock)('card_api');
-        console.log(data.data);
+        if (core.getInput('pull_request') != '') {
+            const github = new github_js_1.GitHub();
+            await github.performAuth();
+            const labels = await github.getLabels();
+            if (!_.includes(labels, 'auto deploy') &&
+                _.includes(labels, 'manual deploy')) {
+                let lock = await getLock();
+                // No lock, we need to lock deployment
+                if (!lock) {
+                    const { data } = await (0, semaphore_js_1.setLock)(component);
+                    lock = data.data;
+                }
+                // Manual deployment, so deployment is not permitted
+                core.setOutput('deployment_lock', lock.id + 'TEST');
+            }
+        }
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -45768,9 +45806,8 @@ exports.setLock = setLock;
 const axios = __nccwpck_require__(8757);
 const core = __importStar(__nccwpck_require__(2186));
 // TEMP: Will be implemented via action inputs
-const semaphoreAPI = core.getInput('semaphoreAPI') || 'https://semaphore.givve.io';
-const semaphoreAPIKey = core.getInput('semaphoreAPIKey') ||
-    '6vibpGZWv+v35CB9FgfmbBz/98Ur9X5FVZm7NoN+WrA=';
+const semaphoreAPI = core.getInput('semaphoreAPI');
+const semaphoreAPIKey = core.getInput('semaphoreAPIKey');
 async function getLocks(component) {
     return axios.get(semaphoreAPI +
         `/api/products/5f7427d977b4b64aeabad92d/components/${component}/locks`, {
