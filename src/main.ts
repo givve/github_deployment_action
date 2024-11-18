@@ -30,6 +30,7 @@ export async function run(): Promise<void> {
         // No lock, we need to lock deployment
         if (!lock) {
           const { result } = await setLock(component)
+          console.log(result)
           lock = result
         }
 

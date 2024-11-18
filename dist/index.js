@@ -45770,6 +45770,7 @@ async function run() {
                 // No lock, we need to lock deployment
                 if (!lock) {
                     const { result } = await (0, semaphore_js_1.setLock)(component);
+                    console.log(result);
                     lock = result;
                 }
                 // Manual deployment, so deployment is not permitted
