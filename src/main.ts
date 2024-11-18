@@ -19,9 +19,7 @@ export async function run(): Promise<void> {
     if (core.getInput('pull_request') != '') {
       const github = new GitHub()
       await github.performAuth()
-
       const labels = await github.getLabels()
-
       if (
         !_.includes(labels, 'auto deploy') &&
         _.includes(labels, 'manual deploy')
@@ -29,11 +27,9 @@ export async function run(): Promise<void> {
         let lock = await getLock()
         // No lock, we need to lock deployment
         if (!lock) {
-          const { result } = await setLock(component)
-          console.log(result)
-          lock = result
+          const { data } = await setLock(component)
+          lock = data.data
         }
-
         // Manual deployment, so deployment is not permitted
         core.setOutput('deployment_lock', lock.id)
       }

@@ -31,7 +31,8 @@ export class GitHub {
         {
           owner: 'givve',
           repo: 'givve',
-          pull_number: core.getInput('pull_request')
+          //pull_number: core.getInput('pull_request')
+          pull_number: 7485
         }
       )
 
