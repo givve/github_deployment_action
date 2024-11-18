@@ -27,8 +27,8 @@ inputs:
 
 # Define your outputs here.
 outputs:
-  deployment_permitted:
-    description: 'If true, automatic deployment can continue'
+  deployment_lock:
+    description: 'If a lock is active, it returns the ID.'
 
 runs:
   using: node20

@@ -16,22 +16,25 @@ const component = core.getInput('component')
  */
 export async function run(): Promise<void> {
   try {
-    const github = new GitHub()
-    await github.performAuth()
+    if (core.getInput('pull_request') != '') {
+      const github = new GitHub()
+      await github.performAuth()
 
-    const labels = await github.getLabels()
+      const labels = await github.getLabels()
 
-    if (_.includes(labels, 'auto deploy')) {
-      await checkOrWait()
-    } else {
-      const lock = await getLock()
-      // No lock, we need to lock deployment
-      if (!lock) {
-        const { result } = await setLock(component)
+      if (
+        !_.includes(labels, 'auto deploy') &&
+        _.includes(labels, 'manual deploy')
+      ) {
+        const lock = await getLock()
+        // No lock, we need to lock deployment
+        if (!lock) {
+          const { result } = await setLock(component)
+        }
+
+        // Manual deployment, so deployment is not permitted
+        core.setOutput('deployment_lock', lock.id)
       }
-
-      // Manual deployment, so deployment is not permitted
-      core.setFailed('Manual deployment lock active! ID to unlock: ' + lock.id)
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
