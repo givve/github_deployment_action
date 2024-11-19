@@ -45724,6 +45724,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 exports.getLock = getLock;
 const core = __importStar(__nccwpck_require__(2186));
+const wait_js_1 = __nccwpck_require__(5259);
 const semaphore_js_1 = __nccwpck_require__(9004);
 const github_js_1 = __nccwpck_require__(978);
 const _ = __importStar(__nccwpck_require__(250));
@@ -45750,8 +45751,11 @@ async function run() {
                     lock = data.data;
                 }
                 // Manual deployment, so deployment is not permitted
-                core.setOutput('deployment_lock', lock.id + 'TEST');
+                core.setOutput('deployment_lock', lock.id);
             }
+        }
+        else {
+            await (0, wait_js_1.checkOrWait)();
         }
     }
     catch (error) {
@@ -45829,6 +45833,65 @@ async function setLock(component) {
             Authorization: semaphoreAPIKey
         }
     });
+}
+
+
+/***/ }),
+
+/***/ 5259:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.checkOrWait = checkOrWait;
+const main_1 = __nccwpck_require__(399);
+const core = __importStar(__nccwpck_require__(2186));
+async function checkOrWait() {
+    return new Promise(async (resolve, reject) => {
+        await check(resolve, reject);
+    });
+}
+async function check(resolve, reject) {
+    const lock = await (0, main_1.getLock)();
+    if (!lock) {
+        resolve('Done!');
+    }
+    else {
+        if (lock.purpose === 'manual deployment lock') {
+            // Some other deployment is running, so we wait
+            core.setOutput('deployment_lock', lock.id);
+            reject('Locked');
+        }
+        else {
+            setTimeout(() => {
+                check(resolve, reject);
+            }, 20000);
+        }
+    }
 }
 
 

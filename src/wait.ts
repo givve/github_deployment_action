@@ -15,7 +15,7 @@ async function check(resolve: any, reject: any) {
   } else {
     if (lock.purpose === 'manual deployment lock') {
       // Some other deployment is running, so we wait
-      core.setFailed('Manual deployment lock active! ID to unlock: ' + lock.id)
+      core.setOutput('deployment_lock', lock.id)
       reject('Locked')
     } else {
       setTimeout(() => {

@@ -31,8 +31,10 @@ export async function run(): Promise<void> {
           lock = data.data
         }
         // Manual deployment, so deployment is not permitted
-        core.setOutput('deployment_lock', lock.id + 'TEST')
+        core.setOutput('deployment_lock', lock.id)
       }
+    } else {
+      await checkOrWait()
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
