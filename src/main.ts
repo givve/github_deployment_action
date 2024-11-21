@@ -20,6 +20,7 @@ export async function run(): Promise<void> {
       const github = new GitHub()
       await github.performAuth()
       const labels = await github.getLabels()
+
       if (
         !_.includes(labels, 'auto deploy') &&
         _.includes(labels, 'manual deploy')
