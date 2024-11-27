@@ -45699,6 +45699,16 @@ class GitHub {
             }
         });
     }
+    async getPRUrl() {
+        return new Promise(async (resolve, reject) => {
+            const { data: issue, error: error } = await this.requestWithAuth('GET /repos/{owner}/{repo}/issues/{pull_number}', {
+                owner: 'givve',
+                repo: 'givve',
+                pull_number: core.getInput('pull_request')
+            });
+            resolve(issue.html_url);
+        });
+    }
     async getLabels() {
         return new Promise(async (resolve, reject) => {
             const { data: issue, error: error } = await this.requestWithAuth('GET /repos/{owner}/{repo}/issues/{pull_number}', {
@@ -45745,7 +45755,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
-exports.getLock = getLock;
 const core = __importStar(__nccwpck_require__(2186));
 const wait_js_1 = __nccwpck_require__(5259);
 const semaphore_js_1 = __nccwpck_require__(9004);
@@ -45765,16 +45774,22 @@ async function run() {
             const github = new github_js_1.GitHub();
             await github.performAuth();
             const labels = await github.getLabels();
+            const url = await github.getPRUrl();
             if (!_.includes(labels, 'auto deploy') &&
                 _.includes(labels, 'manual deploy')) {
-                let lock = await getLock();
+                let lock = await (0, semaphore_js_1.getLock)(component + '_deploy');
                 // No lock, we need to lock deployment
                 if (!lock) {
-                    const { data } = await (0, semaphore_js_1.setLock)(component);
+                    const { data } = await (0, semaphore_js_1.setLock)(component, url);
                     lock = data.data;
+                    core.setOutput('lock_msg', 'Manual deployment enabled! Automatic deployment disabled!');
+                }
+                else {
+                    core.setOutput('lock_msg', 'Deployment already locked! Please check PR!');
                 }
                 // Manual deployment, so deployment is not permitted
                 core.setOutput('deployment_lock', lock.id);
+                core.setOutput('github_pr', url);
             }
         }
         else {
@@ -45786,14 +45801,6 @@ async function run() {
         if (error instanceof Error)
             core.setFailed(error.message);
     }
-}
-async function getLock() {
-    // Manual deployment, check locks
-    const locks = (await (0, semaphore_js_1.getLocks)(component)).data.data;
-    return _.find(locks, {
-        component: component,
-        unlocked_by: null
-    });
 }
 
 
@@ -45827,11 +45834,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getLocks = getLocks;
 exports.setLock = setLock;
+exports.getLock = getLock;
 const axios = __nccwpck_require__(8757);
 const core = __importStar(__nccwpck_require__(2186));
+const lodash_1 = __importDefault(__nccwpck_require__(250));
 // TEMP: Will be implemented via action inputs
 const semaphoreAPI = core.getInput('semaphoreAPI');
 const semaphoreAPIKey = core.getInput('semaphoreAPIKey');
@@ -45843,18 +45855,26 @@ async function getLocks(component) {
         }
     });
 }
-async function setLock(component) {
+async function setLock(component, url) {
     return axios.post(semaphoreAPI +
         `/api/products/5f7427d977b4b64aeabad92d/components/${component}/locks`, {
         lock: {
             created_by: 'github_action',
-            purpose: 'manual deployment lock',
+            purpose: url,
             expires_at: null
         }
     }, {
         headers: {
             Authorization: semaphoreAPIKey
         }
+    });
+}
+async function getLock(component) {
+    // Manual deployment, check locks
+    const locks = (await getLocks(component)).data.data;
+    return lodash_1.default.find(locks, {
+        component: component,
+        unlocked_by: null
     });
 }
 
@@ -45891,28 +45911,36 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.checkOrWait = checkOrWait;
-const main_1 = __nccwpck_require__(399);
+exports.check = check;
 const core = __importStar(__nccwpck_require__(2186));
+const semaphore_1 = __nccwpck_require__(9004);
 async function checkOrWait() {
     return new Promise(async (resolve, reject) => {
         await check(resolve, reject);
     });
 }
 async function check(resolve, reject) {
-    const lock = await (0, main_1.getLock)();
+    const component = core.getInput('component');
+    const lock = await (0, semaphore_1.getLock)(component + '_deploy');
+    const capistranoLock = await (0, semaphore_1.getLock)(component);
     if (!lock) {
         resolve('Done!');
     }
     else {
-        if (lock.purpose === 'manual deployment lock') {
+        if (lock) {
             // Some other deployment is running, so we wait
             core.setOutput('deployment_lock', lock.id);
+            core.setOutput('github_pr', lock.purpose);
+            core.setOutput('lock_msg', 'Automatic deployment locked by manual lock.');
             reject('Locked');
         }
-        else {
+        else if (capistranoLock) {
             setTimeout(() => {
                 check(resolve, reject);
             }, 20000);
+        }
+        else {
+            reject('Locked');
         }
     }
 }

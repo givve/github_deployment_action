@@ -29,6 +29,10 @@ inputs:
 outputs:
   deployment_lock:
     description: 'If a lock is active, it returns the ID.'
+  lock_msg:
+    description: 'Message that should be send to slack.'
+  github_pr:
+    description: 'PR that set the lock.'
 
 runs:
   using: node20

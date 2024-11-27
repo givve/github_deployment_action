@@ -24,6 +24,21 @@ export class GitHub {
     })
   }
 
+  async getPRUrl(): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      const { data: issue, error: error } = await this.requestWithAuth(
+        'GET /repos/{owner}/{repo}/issues/{pull_number}',
+        {
+          owner: 'givve',
+          repo: 'givve',
+          pull_number: core.getInput('pull_request')
+        }
+      )
+
+      resolve(issue.html_url)
+    })
+  }
+
   async getLabels(): Promise<string[]> {
     return new Promise(async (resolve, reject) => {
       const { data: issue, error: error } = await this.requestWithAuth(
