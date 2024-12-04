@@ -30,17 +30,24 @@ export async function run(): Promise<void> {
         let lock = await getLock(component + '_deploy')
         // No lock, we need to lock deployment
         if (!lock) {
-          const { data } = await setLock(component, url)
-          lock = data.data
-          core.setOutput(
-            'lock_msg',
-            'Manual deployment enabled! Automatic deployment disabled!'
-          )
+          try {
+            const { data } = await setLock(component + '_deploy', url)
+
+            lock = data.data
+            core.setOutput(
+              'lock_msg',
+              'Manual deployment enabled! Automatic deployment disabled!'
+            )
+            core.setOutput('github_pr', url)
+          } catch (error) {
+            console.log(error)
+          }
         } else {
           core.setOutput(
             'lock_msg',
             'Deployment already locked! Please check PR!'
           )
+          core.setOutput('github_pr', lock.purpose)
         }
 
         // Manual deployment, so deployment is not permitted

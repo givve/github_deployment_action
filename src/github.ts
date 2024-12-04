@@ -35,7 +35,12 @@ export class GitHub {
         }
       )
 
-      resolve(issue.html_url)
+      if (error) {
+        console.log(error)
+        reject(error)
+      } else {
+        resolve(issue.html_url)
+      }
     })
   }
 
@@ -49,8 +54,12 @@ export class GitHub {
           pull_number: core.getInput('pull_request')
         }
       )
-
-      resolve(issue.labels.map((label: any) => label.name))
+      if (error) {
+        console.log(error)
+        reject(error)
+      } else {
+        resolve(issue.labels.map((label: any) => label.name))
+      }
     })
   }
 }

@@ -45706,7 +45706,13 @@ class GitHub {
                 repo: 'givve',
                 pull_number: core.getInput('pull_request')
             });
-            resolve(issue.html_url);
+            if (error) {
+                console.log(error);
+                reject(error);
+            }
+            else {
+                resolve(issue.html_url);
+            }
         });
     }
     async getLabels() {
@@ -45716,7 +45722,13 @@ class GitHub {
                 repo: 'givve',
                 pull_number: core.getInput('pull_request')
             });
-            resolve(issue.labels.map((label) => label.name));
+            if (error) {
+                console.log(error);
+                reject(error);
+            }
+            else {
+                resolve(issue.labels.map((label) => label.name));
+            }
         });
     }
 }
@@ -45780,12 +45792,19 @@ async function run() {
                 let lock = await (0, semaphore_js_1.getLock)(component + '_deploy');
                 // No lock, we need to lock deployment
                 if (!lock) {
-                    const { data } = await (0, semaphore_js_1.setLock)(component, url);
-                    lock = data.data;
-                    core.setOutput('lock_msg', 'Manual deployment enabled! Automatic deployment disabled!');
+                    try {
+                        const { data } = await (0, semaphore_js_1.setLock)(component + '_deploy', url);
+                        lock = data.data;
+                        core.setOutput('lock_msg', 'Manual deployment enabled! Automatic deployment disabled!');
+                        core.setOutput('github_pr', url);
+                    }
+                    catch (error) {
+                        console.log(error);
+                    }
                 }
                 else {
                     core.setOutput('lock_msg', 'Deployment already locked! Please check PR!');
+                    core.setOutput('github_pr', lock.purpose);
                 }
                 // Manual deployment, so deployment is not permitted
                 core.setOutput('deployment_lock', lock.id);
