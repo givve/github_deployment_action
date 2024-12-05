@@ -1,7 +1,7 @@
 {
   "name": "typescript-action",
   "description": "Givve Automatic Deployment",
-  "version": "v0.1.12",
+  "version": "v0.1.13",
   "author": "PL Gutscheinsysteme GmbH",
   "private": true,
   "homepage": "https://github.com/givve/github_deployment_action",
